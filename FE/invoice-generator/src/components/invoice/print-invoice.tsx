@@ -1,4 +1,3 @@
-import { forwardRef } from 'react'
 import { formatCurrency, formatDate } from '../../lib/utils'
 
 interface InvoiceItem {
@@ -19,7 +18,7 @@ interface PrintInvoiceProps {
   createdAt: string
 }
 
-export const PrintInvoice = forwardRef<HTMLDivElement, PrintInvoiceProps>(function PrintInvoice(props, ref) {
+export function PrintInvoice(props: PrintInvoiceProps) {
   const {
     invoiceNumber,
     customerName,
@@ -35,7 +34,7 @@ export const PrintInvoice = forwardRef<HTMLDivElement, PrintInvoiceProps>(functi
   const total = items.reduce((sum, item) => sum + item.quantity * item.price, 0)
 
   return (
-    <div id="print-content" ref={ref} className="hidden print:block print:p-8 print:bg-white print:w-[210mm] print:min-h-[297mm] print:mx-auto print:shadow-none">
+    <div id="print-content" className="hidden print:block print:p-8 print:bg-white print:w-[210mm] print:min-h-[297mm] print:mx-auto print:shadow-none">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold">INVOICE</h1>
         <p className="text-xl">#{invoiceNumber}</p>
@@ -112,6 +111,4 @@ export const PrintInvoice = forwardRef<HTMLDivElement, PrintInvoiceProps>(functi
       </div>
     </div>
   )
-})
-
-PrintInvoice.displayName = 'PrintInvoice'
+}

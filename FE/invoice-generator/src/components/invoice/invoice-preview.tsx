@@ -1,5 +1,3 @@
-import { useRef } from "react";
-import { useReactToPrint } from "react-to-print";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -32,12 +30,8 @@ interface InvoicePreviewProps {
 }
 
 export function InvoicePreview(props: InvoicePreviewProps) {
-  const printRef = useRef<HTMLDivElement>(null);
-  const handlePrint = useReactToPrint({
-    documentTitle: `Invoice-${props.invoiceNumber}`,
-    onAfterPrint: () => console.log("Printed successfully!"),
-    onPrintError: (error) => console.error("Failed to print:", error),
-  });
+
+  const handlePrint = () => window.print();
 
   const total = props.items.reduce(
     (sum, item) => sum + item.quantity * item.price,
@@ -131,7 +125,7 @@ export function InvoicePreview(props: InvoicePreviewProps) {
         </CardContent>
       </Card>
 
-      <PrintInvoice ref={printRef} {...props} />
+      <PrintInvoice {...props} />
     </div>
   );
 }
