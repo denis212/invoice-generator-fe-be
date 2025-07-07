@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  email     String   @unique
+  role      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model BusinessProfile {
+  id            String   @id @default(uuid())
+  businessName  String
+  address       String
+  phone         String
+  email         String
+  website       String?
+  taxId         String?
+  bankAccounts  Json[]
+  logoUrl       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("business_profiles")
+}
+
+model Customer {
+  id        String    @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  address   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  invoices  Invoice[]
+
+  @@map("customers")
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  unit        String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  InvoiceItem InvoiceItem[]
+
+  @@map("products")
+}
+
+model Invoice {
+  id          String        @id @default(uuid())
+  number      String        @unique
+  customerId  String
+  customer    Customer      @relation(fields: [customerId], references: [id])
+  issueDate   DateTime
+  dueDate     DateTime
+  subtotal    Float
+  taxAmount   Float
+  totalAmount Float
+  status      String
+  notes       String?
+  items       InvoiceItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id        String   @id @default(uuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  total     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("invoice_items")
+}
