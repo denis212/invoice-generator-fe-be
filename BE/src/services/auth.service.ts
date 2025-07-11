@@ -83,4 +83,14 @@ export class AuthService {
 
     return user;
   }
+
+  static async hasAdminUser(): Promise<boolean> {
+    const adminUser = await prisma.user.findFirst({
+      where: {
+        role: 'admin'
+      }
+    });
+
+    return !!adminUser;
+  }
 }

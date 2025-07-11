@@ -1,11 +1,15 @@
 import { Elysia, t } from 'elysia';
 import { InvoiceService } from '../services/invoice.service';
 import { invoiceSchema } from '../utils/validation';
-import { isAuthenticated } from '../middleware/auth';
 
 export const invoiceRouter = new Elysia({ prefix: '/invoices' })
-  .use(isAuthenticated)
-  .get('/', async ({ query }) => {
+  .get('/', async ({ jwt, headers: { authorization }, query, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     const {
       search,
       status,
@@ -26,7 +30,13 @@ export const invoiceRouter = new Elysia({ prefix: '/invoices' })
       limit: Number(limit) || 10
     });
   })
-  .get('/:id', async ({ params: { id }, set }) => {
+  .get('/:id', async ({ jwt, headers: { authorization }, params: { id }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       return await InvoiceService.findById(id);
     } catch (error) {
@@ -37,7 +47,13 @@ export const invoiceRouter = new Elysia({ prefix: '/invoices' })
       };
     }
   })
-  .post('/', async ({ body, set }) => {
+  .post('/', async ({ jwt, headers: { authorization }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       const validatedData = invoiceSchema.parse(body);
       const invoice = await InvoiceService.create({
@@ -72,7 +88,13 @@ export const invoiceRouter = new Elysia({ prefix: '/invoices' })
       notes: t.Optional(t.String())
     })
   })
-  .put('/:id', async ({ params: { id }, body, set }) => {
+  .put('/:id', async ({ jwt, headers: { authorization }, params: { id }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       const validatedData = invoiceSchema.partial().parse(body);
       const invoice = await InvoiceService.update(id, {
@@ -106,7 +128,13 @@ export const invoiceRouter = new Elysia({ prefix: '/invoices' })
       notes: t.Optional(t.String())
     }))
   })
-  .delete('/:id', async ({ params: { id }, set }) => {
+  .delete('/:id', async ({ jwt, headers: { authorization }, params: { id }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       await InvoiceService.delete(id);
       return {
@@ -120,7 +148,13 @@ export const invoiceRouter = new Elysia({ prefix: '/invoices' })
       };
     }
   })
-  .put('/:id/status', async ({ params: { id }, body, set }) => {
+  .put('/:id/status', async ({ jwt, headers: { authorization }, params: { id }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       if (!body.status || typeof body.status !== 'string') {
         set.status = 400;

@@ -1,11 +1,15 @@
 import { Elysia, t } from 'elysia';
 import { BusinessProfileService } from '../services/business-profile.service';
 import { businessProfileSchema } from '../utils/validation';
-import { isAdmin, isAuthenticated } from '../middleware/auth';
 
 export const businessProfileRouter = new Elysia({ prefix: '/business-profile' })
-  .use(isAuthenticated)
-  .get('/', async ({ set }) => {
+  .get('/', async ({ jwt, headers: { authorization }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       return await BusinessProfileService.getProfile();
     } catch (error) {
@@ -16,8 +20,13 @@ export const businessProfileRouter = new Elysia({ prefix: '/business-profile' })
       };
     }
   })
-  .use(isAdmin)
-  .post('/', async ({ body, set }) => {
+  .post('/', async ({ jwt, headers: { authorization }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       const validatedData = businessProfileSchema.parse(body);
       const profile = await BusinessProfileService.create(validatedData);
@@ -48,7 +57,13 @@ export const businessProfileRouter = new Elysia({ prefix: '/business-profile' })
       }))
     })
   })
-  .put('/:id', async ({ params: { id }, body, set }) => {
+  .put('/:id', async ({ jwt, headers: { authorization }, params: { id }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       const validatedData = businessProfileSchema.partial().parse(body);
       const profile = await BusinessProfileService.update(id, validatedData);
@@ -78,7 +93,13 @@ export const businessProfileRouter = new Elysia({ prefix: '/business-profile' })
       }))
     }))
   })
-  .put('/:id/logo', async ({ params: { id }, body, set }) => {
+  .put('/:id/logo', async ({ jwt, headers: { authorization }, params: { id }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       if (!body.logoUrl || typeof body.logoUrl !== 'string') {
         set.status = 400;
@@ -105,7 +126,13 @@ export const businessProfileRouter = new Elysia({ prefix: '/business-profile' })
       logoUrl: t.String()
     })
   })
-  .put('/:id/bank-accounts', async ({ params: { id }, body, set }) => {
+  .put('/:id/bank-accounts', async ({ jwt, headers: { authorization }, params: { id }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       if (!Array.isArray(body.bankAccounts)) {
         set.status = 400;
