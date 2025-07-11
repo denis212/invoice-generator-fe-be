@@ -45,3 +45,4 @@ coverage/
 # Temporary files
 *.tmp
 *.tempcookies.txt
+*.har
