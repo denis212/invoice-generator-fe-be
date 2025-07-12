@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import type { Context as ElysiaContext } from "elysia";
 import { UserService } from "../services/user.service";
 import { userSchema } from "../utils/validation";
-import { isAuthenticated, isAdmin } from "../middleware/auth";
+// import { isAuthenticated, isAdmin } from "../middleware/auth";
 
 type BaseContext = ElysiaContext & {
   user: User | null;
@@ -78,14 +78,12 @@ type CreateUserBody = {
 type UpdateUserBody = Partial<CreateUserBody>;
 
 export const userRouter = new Elysia({ prefix: "/users" })
-  .use(isAuthenticated)
-  .get("/profile", async ({ user, set }) => {
-    if (!user?.id) {
+  .get("/profile", async ({ jwt, headers: { authorization }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
       set.status = 401;
-      return {
-        message: "Unauthorized",
-        error: true,
-      };
+      return { message: "Unauthorized", error: true };
     }
 
     try {
@@ -101,13 +99,12 @@ export const userRouter = new Elysia({ prefix: "/users" })
   })
   .put(
     "/profile/password",
-    async ({ user, body, set }) => {
-      if (!user?.id) {
+    async ({ jwt, headers: { authorization }, body, set }) => {
+      const user = await jwt.verify(authorization);
+      
+      if (!user) {
         set.status = 401;
-        return {
-          message: "Unauthorized",
-          error: true,
-        };
+        return { message: "Unauthorized", error: true };
       }
 
       try {
@@ -144,8 +141,14 @@ export const userRouter = new Elysia({ prefix: "/users" })
       }),
     }
   )
-  .use(isAdmin)
-  .get("/", async ({ query }) => {
+  .get("/", async ({ jwt, headers: { authorization }, set, query }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: "Unauthorized", error: true };
+    }
+    
     const { search, role, page, limit } = query;
     return await UserService.findAll({
       search: search as string,
@@ -154,7 +157,13 @@ export const userRouter = new Elysia({ prefix: "/users" })
       limit: Number(limit) || 10,
     });
   })
-  .get("/:id", async ({ params: { id }, set }) => {
+  .get("/:id", async ({ jwt, headers: { authorization }, params: { id }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: "Unauthorized", error: true };
+    }
     try {
       return await UserService.findById(id);
     } catch (error) {
@@ -168,7 +177,13 @@ export const userRouter = new Elysia({ prefix: "/users" })
   })
   .post(
     "/",
-    async ({ body, set }) => {
+    async ({ jwt, headers: { authorization }, body, set }) => {
+      const user = await jwt.verify(authorization);
+      
+      if (!user) {
+        set.status = 401;
+        return { message: "Unauthorized", error: true };
+      }
       try {
         const validatedData = userSchema.parse(body);
         const user = await UserService.create(validatedData);
@@ -197,7 +212,13 @@ export const userRouter = new Elysia({ prefix: "/users" })
   )
   .put(
     "/:id",
-    async ({ params: { id }, body, set }) => {
+    async ({ jwt, headers: { authorization }, params: { id }, body, set }) => {
+      const user = await jwt.verify(authorization);
+      
+      if (!user) {
+        set.status = 401;
+        return { message: "Unauthorized", error: true };
+      }
       try {
         const validatedData = userSchema.partial().parse(body);
         const user = await UserService.update(id, validatedData);
@@ -228,7 +249,14 @@ export const userRouter = new Elysia({ prefix: "/users" })
       ),
     }
   )
-  .delete("/:id", async ({ params: { id }, user, set }) => {
+  .delete("/:id", async ({ jwt, headers: { authorization }, params: { id }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: "Unauthorized", error: true };
+    }
+
     try {
       if (user?.id === id) {
         set.status = 400;

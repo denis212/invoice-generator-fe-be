@@ -1,15 +1,8 @@
 import { Elysia, t } from "elysia";
-import { jwt } from "@elysiajs/jwt";
-import { cookie } from "@elysiajs/cookie";
 import { AuthService } from "../services/auth.service";
 import { loginSchema, userSchema } from "../utils/validation";
 
 export const authRouter = new Elysia({ prefix: "/auth" })
-  .use(jwt({
-    name: "jwt",
-    secret: process.env.JWT_SECRET!
-  }))
-  .use(cookie())
   .post("/register", async ({ body, set }) => {
     try {
       const validatedData = userSchema.parse(body);
@@ -41,7 +34,7 @@ export const authRouter = new Elysia({ prefix: "/auth" })
       role: t.String()
     })
   })
-  .post("/login", async ({ body, jwt, setCookie, set }) => {
+  .post("/login", async ({ body, jwt, set }) => {
     try {
       const validatedData = loginSchema.parse(body);
       const user = await AuthService.login(
@@ -53,12 +46,6 @@ export const authRouter = new Elysia({ prefix: "/auth" })
         id: user.id,
         username: user.username,
         role: user.role,
-      });
-
-      setCookie("auth", token, {
-        httpOnly: true,
-        maxAge: 7 * 86400, // 7 days
-        path: "/",
       });
 
       return {
@@ -81,9 +68,20 @@ export const authRouter = new Elysia({ prefix: "/auth" })
       password: t.String()
     })
   })
-  .post("/logout", ({ removeCookie }) => {
-    removeCookie("auth");
+  .post("/logout", () => {
     return {
       message: "Logout berhasil",
     };
+  })
+  .get("/setup-check", async () => {
+    try {
+      const hasAdmin = await AuthService.hasAdminUser();
+      return {
+        setupRequired: !hasAdmin,
+      };
+    } catch (error) {
+      return {
+        setupRequired: true,
+      };
+    }
   });

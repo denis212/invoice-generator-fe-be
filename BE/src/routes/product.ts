@@ -1,11 +1,15 @@
 import { Elysia } from 'elysia';
 import { ProductService } from '../services/product.service';
 import { productSchema } from '../utils/validation';
-import { isAuthenticated } from '../middleware/auth';
 
 export const productRouter = new Elysia({ prefix: '/products' })
-  .use(isAuthenticated)
-  .get('/', async ({ query }) => {
+  .get('/', async ({ jwt, headers: { authorization }, query, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     const { search, page, limit } = query;
     return await ProductService.findAll({
       search: search as string,
@@ -13,7 +17,13 @@ export const productRouter = new Elysia({ prefix: '/products' })
       limit: Number(limit) || 10
     });
   })
-  .get('/:id', async ({ params: { id }, set }) => {
+  .get('/:id', async ({ jwt, headers: { authorization }, params: { id }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       return await ProductService.findById(id);
     } catch (error) {
@@ -24,7 +34,13 @@ export const productRouter = new Elysia({ prefix: '/products' })
       };
     }
   })
-  .post('/', async ({ body, set }) => {
+  .post('/', async ({ jwt, headers: { authorization }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       const validatedData = productSchema.parse(body);
       const product = await ProductService.create(validatedData);
@@ -41,7 +57,13 @@ export const productRouter = new Elysia({ prefix: '/products' })
       };
     }
   })
-  .put('/:id', async ({ params: { id }, body, set }) => {
+  .put('/:id', async ({ jwt, headers: { authorization }, params: { id }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       const validatedData = productSchema.partial().parse(body);
       const product = await ProductService.update(id, validatedData);
@@ -57,7 +79,13 @@ export const productRouter = new Elysia({ prefix: '/products' })
       };
     }
   })
-  .delete('/:id', async ({ params: { id }, set }) => {
+  .delete('/:id', async ({ jwt, headers: { authorization }, params: { id }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       await ProductService.delete(id);
       return {

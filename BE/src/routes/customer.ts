@@ -1,11 +1,15 @@
 import { Elysia } from 'elysia';
 import { CustomerService } from '../services/customer.service';
 import { customerSchema } from '../utils/validation';
-import { isAuthenticated } from '../middleware/auth';
 
 export const customerRouter = new Elysia({ prefix: '/customers' })
-  .use(isAuthenticated)
-  .get('/', async ({ query }) => {
+  .get('/', async ({ jwt, headers: { authorization }, query, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     const { search, page, limit } = query;
     return await CustomerService.findAll({
       search: search as string,
@@ -13,7 +17,13 @@ export const customerRouter = new Elysia({ prefix: '/customers' })
       limit: Number(limit) || 10
     });
   })
-  .get('/:id', async ({ params: { id }, set }) => {
+  .get('/:id', async ({ jwt, headers: { authorization }, params: { id }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       return await CustomerService.findById(id);
     } catch (error) {
@@ -24,7 +34,13 @@ export const customerRouter = new Elysia({ prefix: '/customers' })
       };
     }
   })
-  .post('/', async ({ body, set }) => {
+  .post('/', async ({ jwt, headers: { authorization }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       const validatedData = customerSchema.parse(body);
       const customer = await CustomerService.create(validatedData);
@@ -41,7 +57,13 @@ export const customerRouter = new Elysia({ prefix: '/customers' })
       };
     }
   })
-  .put('/:id', async ({ params: { id }, body, set }) => {
+  .put('/:id', async ({ jwt, headers: { authorization }, params: { id }, body, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       const validatedData = customerSchema.partial().parse(body);
       const customer = await CustomerService.update(id, validatedData);
@@ -57,7 +79,13 @@ export const customerRouter = new Elysia({ prefix: '/customers' })
       };
     }
   })
-  .delete('/:id', async ({ params: { id }, set }) => {
+  .delete('/:id', async ({ jwt, headers: { authorization }, params: { id }, set }) => {
+    const user = await jwt.verify(authorization);
+    
+    if (!user) {
+      set.status = 401;
+      return { message: 'Unauthorized', error: true };
+    }
     try {
       await CustomerService.delete(id);
       return {
